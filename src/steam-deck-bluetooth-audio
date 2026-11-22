@@ -9,7 +9,7 @@ app_dir="$HOME/.local/share/$app"
 case "${1:-}" in
     start|stop|restart)
         if [[ -z "${XDG_RUNTIME_DIR:-}" || ! -d "$XDG_RUNTIME_DIR" ]]; then
-            echo "Откройте Konsole в Desktop Mode и повторите команду." >&2
+            echo "Open Konsole in Desktop Mode and run the command again." >&2
             exit 1
         fi
         exec 9<"$XDG_RUNTIME_DIR"
@@ -31,11 +31,11 @@ case "${1:-}" in
         ;;
     status)
         if systemctl --user is-active --quiet "$unit"; then
-            echo "Сервис работает."
+            echo "The service is running."
         else
-            echo "Сервис остановлен или перезапускается."
+            echo "The service is stopped or restarting."
         fi
-        printf 'Автозапуск: '
+        printf 'Automatic startup: '
         systemctl --user is-enabled "$unit" || true
         "$app_dir/deck_audio.py" status
         ;;
@@ -43,7 +43,7 @@ case "${1:-}" in
         exec "$app_dir/uninstall.sh"
         ;;
     *)
-        echo "Использование: $app {start|stop|status|restart|uninstall}" >&2
+        echo "Usage: $app {start|stop|status|restart|uninstall}" >&2
         exit 2
         ;;
 esac

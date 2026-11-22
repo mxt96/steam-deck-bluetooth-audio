@@ -55,7 +55,7 @@ def parse_json(value):
     try:
         return json.loads(value)
     except json.JSONDecodeError as exc:
-        raise AudioError("Некорректный ответ JSON от аудиосервера или BlueZ") from exc
+        raise AudioError("Invalid JSON response from the audio server or BlueZ") from exc
 
 
 @dataclass(frozen=True)
@@ -165,7 +165,7 @@ class Pulse:
         info = self.info()
         server = info.get("server_name", "")
         if "PipeWire" not in server:
-            raise AudioError(f"Нужен PipeWire с pipewire-pulse. Сервер: {server or 'неизвестен'}")
+            raise AudioError(f"PipeWire with pipewire-pulse is required. Current server: {server or 'unknown'}")
         command("wpctl", "status")
         self.cookie = info.get("cookie", "")
 
@@ -286,7 +286,7 @@ class Router:
         graph = self.pulse.graph()
         null_modules = graph.null_modules
         if graph.sink is not None and graph.sink.get("owner_module") not in null_modules:
-            raise AudioError(f"Имя {SINK} уже используется другим аудиовыходом")
+            raise AudioError(f"Another audio output already uses the name {SINK}")
         if graph.sink is None:
             if not null_modules:
                 self.pulse.load("module-null-sink", SINK_ARGS)
@@ -341,7 +341,7 @@ class Router:
                 return
             self.pulse.unload_owned(module)
         if attempt and attempt.module is not None:
-            error = "PipeWire не подтвердил привязку потока"
+            error = "PipeWire did not confirm the stream link"
         else:
             try:
                 module = self.pulse.load("module-loopback", loop_args(device))
@@ -353,7 +353,7 @@ class Router:
                 return
         delay = min(attempt.delay * 2 if attempt else SETTLE * 2, RETRY_LIMIT)
         self.attempts[key] = Attempt(now + delay, delay=delay)
-        LOG.warning("%s: %s. Повтор через %s с", device.description, error, delay)
+        LOG.warning("%s: %s. Retrying in %s seconds", device.description, error, delay)
 
     def cleanup(self):
         self.pulse.check()
@@ -374,7 +374,7 @@ def runtime_lock(directory):
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
-            raise AudioError("Другой экземпляр сервиса уже управляет аудиовыходом") from exc
+            raise AudioError("Another service instance is managing the audio output") from exc
         yield
 
 
@@ -424,7 +424,7 @@ def watch_events(router, selector, stream, stopping):
             try:
                 retry_due = router.reconcile(now)
             except AudioError as exc:
-                LOG.warning("%s. Повтор через 5 с", exc)
+                LOG.warning("%s. Retrying in 5 seconds", exc)
                 blocked_until = time.monotonic() + 5
                 retry_due = blocked_until
             continue
@@ -438,7 +438,7 @@ def watch_events(router, selector, stream, stopping):
             if not chunk:
                 if stopping():
                     return
-                raise AudioError("Подписка pactl завершилась. systemd перезапустит сервис")
+                raise AudioError("The pactl subscription ended. systemd will restart the service")
             lines = (pending + chunk).split(b"\n")
             pending = lines.pop()
             if event_due is None and any(EVENT.match(line) for line in lines):
@@ -474,26 +474,26 @@ def status(pulse):
     default = pulse.default()
     linked = graph.linked
     devices = graph.devices
-    print(f"Выход по умолчанию: {default or 'нет'}")
-    print(f"Bluetooth-выходов в PipeWire: {len(devices)}. Подключено к объединению: {len(linked)}.")
+    print(f"Default audio output: {default or 'none'}")
+    print(f"PipeWire Bluetooth outputs: {len(devices)}. Linked to multicast: {len(linked)}.")
     for device in sorted(devices.values(), key=lambda item: item.description.casefold()):
-        state = "маршрут подключён" if device.name in linked else "маршрут отсутствует"
+        state = "linked" if device.name in linked else "no route"
         print(f"  {device.description} — {state}")
     try:
         connected = connected_audio()
     except (AudioError, KeyError, TypeError, ValueError):
-        print("BlueZ: список дополнительно подключённых устройств недоступен.")
+        print("BlueZ device list unavailable.")
     else:
         addresses = {device.address for device in devices.values()}
         unnamed = sum(not device.address for device in devices.values())
         without_output = {address: label for address, label in connected.items() if address not in addresses}
         if len(without_output) > unnamed:
             labels = ", ".join(sorted(without_output.values()))
-            print(f"BlueZ: для части устройств нет подтверждённого аудиовыхода PipeWire ({labels}).")
+            print(f"Some connected BlueZ devices have no confirmed PipeWire audio output ({labels}).")
     if len(linked) < len(devices):
-        print("Проверьте профиль A2DP/LE Audio и журнал. Возможен предел контроллера, профиля или кодека.")
+        print("Check the A2DP or LE Audio profile and the service logs. The controller, profile, or codec may limit concurrent connections.")
     if len(linked) >= 3:
-        print("Активность маршрутов подтверждена. Одновременный звук и задержку проверьте на наушниках.")
+        print("The routes are linked. Check playback and latency on the headphones.")
 
 
 def main():
@@ -508,7 +508,7 @@ def main():
         elif action in {"run", "cleanup"}:
             runtime = os.environ.get("XDG_RUNTIME_DIR")
             if not runtime:
-                raise AudioError("XDG_RUNTIME_DIR недоступен. Запустите в пользовательской сессии.")
+                raise AudioError("XDG_RUNTIME_DIR is unavailable. Run this in your user session.")
             directory = Path(runtime) / NAME
             with runtime_lock(directory):
                 router = Router(pulse, RoutingJournal(directory / "previous-sink"))
@@ -517,7 +517,7 @@ def main():
                 else:
                     router.cleanup()
         else:
-            raise AudioError("Использование: deck_audio.py {run|cleanup|check|status}")
+            raise AudioError("Usage: deck_audio.py {run|cleanup|check|status}")
     except (AudioError, OSError) as exc:
         LOG.error("%s", exc)
         return 1

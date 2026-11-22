@@ -44,7 +44,7 @@ class FakePulse:
     def load(self, module, args):
         config = parse_args(args)
         if config.get("sink") in self.fail:
-            raise AudioError("отказ транспорта")
+            raise AudioError("transport failure")
         index = self.next_id
         self.next_id += 1
         self.modules[index] = dict(name=module, index=index, argument=args)
@@ -158,7 +158,7 @@ class RouterTests(unittest.TestCase):
         self.router.reconcile(0)
         with self.assertLogs(level="WARNING") as logs:
             deadline = self.reconcile(1)
-        self.assertIn("отказ транспорта", logs.output[0])
+        self.assertIn("transport failure", logs.output[0])
         self.assertEqual(set(self.pulse.graph().linked), {"one", "two"})
         self.assertEqual(deadline, 7)
         self.pulse.fail.clear()
@@ -172,7 +172,7 @@ class RouterTests(unittest.TestCase):
         self.reconcile(1)
         with self.assertLogs(level="WARNING") as logs:
             self.reconcile(4)
-        self.assertIn("не подтвердил привязку", logs.output[0])
+        self.assertIn("did not confirm the stream link", logs.output[0])
         self.assertEqual(self.pulse.selected, "speakers")
         self.assertEqual(self.pulse.graph().loops, {})
 
@@ -231,7 +231,7 @@ class RouterTests(unittest.TestCase):
     def test_foreign_sink_name_collision_is_safe(self):
         self.pulse.sinks[SINK] = {**sink(SINK, 22), "owner_module": 9}
         self.add("one", 10)
-        with self.assertRaisesRegex(AudioError, "уже используется"):
+        with self.assertRaisesRegex(AudioError, "already uses the name"):
             self.router.reconcile(0)
         self.router.cleanup()
         self.assertIn(SINK, self.pulse.sinks)

@@ -1,16 +1,14 @@
 # Steam Deck Bluetooth Audio Multicast
 
-Один виртуальный аудиовыход **Bluetooth Audio Multicast** отправляет звук игр, музыки и видео на подключённые Bluetooth-наушники. Программа обнаруживает аудиовыходы после штатного сопряжения, добавляет и удаляет маршруты при переподключении и запускается при входе пользователя после перезагрузки.
+**Bluetooth Audio Multicast** is a virtual audio output that sends game, music, and video audio to connected Bluetooth headphones. The service discovers outputs after pairing, updates routes as headphones connect and disconnect, and starts automatically when you sign in after a reboot.
 
-В объединение попадают только Bluetooth-аудиовыходы, доступные в PipeWire. Когда последняя пара отключается, программа возвращает прежний выход, если он доступен, или передаёт выбор WirePlumber. В этот момент обычное воспроизведение может перейти на динамики Steam Deck. Пока приложение направлено в объединение, встроенные динамики из него звук не получают.
+The multicast output routes audio exclusively to Bluetooth devices exposed by PipeWire. When the last pair disconnects, the service restores the previous output if it is available. Otherwise WirePlumber chooses an output, which may be the Steam Deck speakers.
 
-## Установка на Steam Deck OLED
+## Install on Steam Deck OLED
 
-Переключитесь в **Desktop Mode** через меню питания и откройте **Konsole**. Устанавливайте от пользователя Steam Deck. Понадобятся Python 3.10+, `pactl`, `wpctl`, `systemctl` и `flock`, а также работающие PipeWire, pipewire-pulse и WirePlumber. Для команды загрузки нужны `curl` и `tar`. Установщик проверяет локальный аудиостек и записывает файлы только в домашний каталог. Сопряжение выполняется в обычных настройках Bluetooth Steam Deck.
+From the power menu, switch to **Desktop Mode** and open **Konsole**. Run the installer as your regular Steam Deck user without `sudo`. It requires Python 3.10 or later, `pactl`, `wpctl`, `systemctl`, `flock`, and a working PipeWire, pipewire-pulse, and WirePlumber session. The download commands also require `curl` and `tar`. The installer checks the audio stack and installs files in your home directory. Pair your headphones in the regular Steam Deck Bluetooth settings.
 
-### Скачать, проверить и запустить
-
-Команды загрузки с GitHub заработают после публикации проекта в `mxt96/steam-deck-bluetooth-audio`. Из полученного другим способом архива распакуйте проект и перейдите сразу к просмотру и запуску установщика.
+### Download, review, and install
 
 ```bash
 cd ~/Downloads
@@ -26,33 +24,33 @@ less uninstall.sh
 bash install.sh
 ```
 
-Для воспроизводимой установки замените `refs/heads/main.tar.gz` в URL на `<проверенный SHA коммита>.tar.gz` и перейдите в распакованный каталог с этим SHA. При повторном запуске установщик обновит принадлежащие проекту файлы и перезапустит сервис. Активное объединение при обновлении может кратко прерваться.
+Press `q` to exit each `less` preview. To install from a specific commit, replace `refs/heads/main.tar.gz` in the URL with `<verified commit SHA>.tar.gz` and enter the extracted directory with that SHA. Running the installer again updates the project files and restarts the service. This may briefly interrupt playback.
 
-### Установка одной командой
+### Install with one command
 
-Запускайте этот вариант, если доверяете содержимому ветки `main`. Команда сразу выполняет скачанный установщик с правами текущего пользователя. Перед первым запуском можно использовать вариант с предварительным просмотром выше.
+Use this option if you trust the contents of `main`. The command runs the downloaded installer with your user's permissions. To inspect the files first, use the steps above.
 
 ```bash
 bash -c 'set -e; d=$(mktemp -d); trap '\''rm -rf -- "$d"'\'' EXIT; curl -fL https://github.com/mxt96/steam-deck-bluetooth-audio/archive/refs/heads/main.tar.gz -o "$d/source.tar.gz"; tar -xzf "$d/source.tar.gz" -C "$d"; bash "$d/steam-deck-bluetooth-audio-main/install.sh"'
 ```
 
-Подключите две пары в настройках Bluetooth, включите звук и подождите несколько секунд. Выход по умолчанию должен смениться на **Bluetooth Audio Multicast**, а команда `status` показать оба маршрута. Для приложения, у которого выбран отдельный аудиовыход, выберите **Bluetooth Audio Multicast** в его настройках звука или в микшере KDE. Если приложение удерживает старый выход, перезапустите воспроизведение.
+Connect two pairs in Bluetooth settings, start playback, and wait a few seconds. The default output should switch to **Bluetooth Audio Multicast** and `status` should report `Linked to multicast: 2.` If an app uses a dedicated output, select **Bluetooth Audio Multicast** in the app's audio settings or in the KDE mixer. If it still uses the old output, restart playback.
 
-## Управление
+## Manage the service
 
-Команды ниже работают и в сеансе, где `~/.local/bin` отсутствует в `PATH`.
+Use these commands even if `~/.local/bin` is absent from your `PATH`.
 
-| Команда | Действие |
+| Command | Action |
 | --- | --- |
-| `~/.local/bin/steam-deck-bluetooth-audio start` | Включить сервис и автозапуск. |
-| `~/.local/bin/steam-deck-bluetooth-audio stop` | Выключить сервис и автозапуск, вернуть обычный вывод. |
-| `~/.local/bin/steam-deck-bluetooth-audio status` | Показать состояние сервиса, текущий выход и маршруты наушников. |
-| `~/.local/bin/steam-deck-bluetooth-audio restart` | Перезапустить сервис и включить автозапуск. |
-| `~/.local/bin/steam-deck-bluetooth-audio uninstall` | Удалить сервис, команду и принадлежащие проекту аудиомодули. |
+| `~/.local/bin/steam-deck-bluetooth-audio start` | Start the service and enable automatic startup. |
+| `~/.local/bin/steam-deck-bluetooth-audio stop` | Stop the service, disable automatic startup, and restore normal audio routing. |
+| `~/.local/bin/steam-deck-bluetooth-audio status` | Show service status, the current output, and headphone routes. |
+| `~/.local/bin/steam-deck-bluetooth-audio restart` | Restart the service and enable automatic startup. |
+| `~/.local/bin/steam-deck-bluetooth-audio uninstall` | Remove the service, command, and its audio modules. |
 
-Из каталога проекта для удаления также можно запустить `bash uninstall.sh`. Удаление не меняет Bluetooth-сопряжения. Если во время работы сервиса пользователь вручную выбрал другой выход, выбор учитывается до следующего цикла подключения всех наушников.
+You can also run `bash uninstall.sh` from the project directory. Your Bluetooth pairings are preserved. If you manually select another output while the service is running, that selection takes precedence until all headphones disconnect and a pair reconnects.
 
-### Диагностика
+### Troubleshooting
 
 ```bash
 ~/.local/bin/steam-deck-bluetooth-audio status
@@ -62,40 +60,40 @@ wpctl status
 bluetoothctl devices Connected
 ```
 
-- **Наушники подключены в Bluetooth, но в `status` нет маршрута.** Убедитесь, что Steam Deck показывает доступный профиль воспроизведения, например A2DP. При наличии BlueZ в системной D-Bus команда `status` также проверяет подключённые устройства с известными аудиосервисами и показывает, когда для части из них нет подтверждённого выхода PipeWire.
-- **Маршруты есть, игра играет через другой выход.** Выберите **Bluetooth Audio Multicast** в настройках игры или микшере. В Gaming Mode проверьте выбранный выход в настройках звука. В Desktop Mode откройте микшер KDE и проверьте устройство в списке приложений.
-- **Третья пара отсутствует или молчит.** Сравните число выходов PipeWire и число подключённых маршрутов в `status`. При ошибке привязки сервис пишет причину в журнал и повторяет попытку с задержкой. Если маршруты есть, но звука нет, проверьте третью пару отдельно, затем с первой и второй. PipeWire может показывать готовый маршрут, даже если радиоканал или наушники фактически не воспроизводят звук.
-- **После сна звук не вернулся.** Проверьте, вернулись ли наушники в список подключённых устройств. Если Bluetooth сам не восстановил соединение, переподключите пару в Bluetooth-настройках. После появления выхода сервис добавит маршрут автоматически.
+- **Headphones are connected but `status` shows no route.** Check for a playback profile such as A2DP in Steam Deck's settings. When BlueZ is available on the system D-Bus, `status` also checks devices advertising common audio services and reports when some have no confirmed PipeWire output.
+- **Routes exist, but a game plays through a different output.** Select **Bluetooth Audio Multicast** in the game or mixer. In Gaming Mode, check the selected device in the audio settings. In Desktop Mode, check the app's output in the KDE mixer.
+- **A third pair is missing or silent.** Compare the number of Bluetooth outputs and linked routes in `status`. The service logs linking errors and retries with a delay. If the third route is linked and silent, test that pair by itself, then with the other two. PipeWire can report a link even when audio fails to play over Bluetooth.
+- **Audio is missing after waking the Deck.** Check whether the headphones reconnected. If necessary, reconnect them in Bluetooth settings. The service adds their routes as soon as PipeWire exposes the outputs.
 
-## Как устроена маршрутизация
+## How routing works
 
-- `pactl subscribe` сообщает об изменениях серверных настроек и аудиоустройств. Сервис сверяет граф после событий и ограничивает частоту повторов при ошибках. Когда граф стабилен, сервис ожидает событий.
-- Сервис определяет Bluetooth-выходы по `device.api`, `device.bus` и фабрикам `api.bluez5.*`. Префикс имени узла не используется для классификации. Подключённые Bluetooth-колонки, которые BlueZ предоставляет как аудиовыходы, также подходят.
-- Стабильный двухканальный `module-null-sink` принимает звук, а отдельный `module-loopback` на каждый доступный выход копирует звук его монитора. Поток к конкретной паре закреплён за `object.serial` узла. Запрет перемещения и резервного вывода применяется и к захвату, и к воспроизведению. При отключении пары удаляется только её маршрут.
-- Виртуальный выход сохраняет имя в пределах работы сервиса. Когда появляется связанный Bluetooth-маршрут, сервис выбирает его как выход по умолчанию. При остановке сервис восстанавливает обычную маршрутизацию и удаляет свои модули. После аварийного завершения новый процесс использует существующие модули и сохранённое предыдущее устройство, если аудиосервер продолжил работать.
-- `module-combine-sink` принимает список имён ведомых выходов. Для изменяющегося списка пришлось бы перегружать объединённый выход. Нативный `libpipewire-module-combine-stream` умеет добавлять выходы по правилам, но у объектов реестра, по которым он проверяет правила, в исследованной версии PipeWire отсутствуют нужные свойства BlueZ. `pw-link` управляет портами непосредственно и требует отдельно реализовать создание виртуального выхода и сопровождение каждого порта. Сервис использует штатные модули pipewire-pulse с данными о свойствах устройств из `pactl`. [Combine Sink](https://docs.pipewire.org/page_pulse_module_combine_sink.html) · [Combine Stream](https://docs.pipewire.org/page_module_combine_stream.html) · [Свойства реестра узлов PipeWire 1.0.5](https://github.com/PipeWire/pipewire/blob/1.0.5/src/pipewire/impl-node.c) · [Loopback](https://docs.pipewire.org/page_pulse_module_loopback.html)
+- `pactl subscribe` reports changes to the audio server and devices. The service checks the graph after events, backs off after errors, and waits for events when the graph is stable.
+- The service identifies Bluetooth outputs using `device.api`, `device.bus`, and the `api.bluez5.*` factories. This also includes Bluetooth speakers that BlueZ exposes as audio outputs.
+- A persistent stereo `module-null-sink` receives audio. One `module-loopback` per available device copies audio from its monitor. The playback stream is pinned to the device's `object.serial`. Both loopback directions disable stream moves and fallback. Disconnecting a pair removes only its route.
+- The virtual output keeps the same name throughout the service's lifetime. When a Bluetooth route is linked, the service selects the virtual output as the default. On shutdown it restores normal audio routing and unloads its modules. If the service crashes and the audio server stays up, the restarted process adopts the existing modules and reads the saved previous output.
+- `module-combine-sink` takes a list of target output names, so changing that list would require reloading the combined output. The native `libpipewire-module-combine-stream` supports rule-based output discovery. The registry objects it matches in the inspected PipeWire version lack the required BlueZ properties. `pw-link` links ports directly and would require separate management of the virtual output and its ports. The service uses built-in pipewire-pulse modules and reads device properties from `pactl`. [Combine Sink](https://docs.pipewire.org/page_pulse_module_combine_sink.html) · [Combine Stream](https://docs.pipewire.org/page_module_combine_stream.html) · [PipeWire 1.0.5 node registry properties](https://github.com/PipeWire/pipewire/blob/1.0.5/src/pipewire/impl-node.c) · [Loopback](https://docs.pipewire.org/page_pulse_module_loopback.html)
 
-Сервис запускается в пользовательском `default.target` и перезапускается при потере подписки на аудиосервер. При переходе между Desktop Mode и Gaming Mode он продолжит работу, если тот же пользовательский менеджер systemd сохранился, или запустится снова при старте нового. Доступ WirePlumber к Bluetooth зависит от активной сессии logind. При появлении выходов после перехода или сна маршруты будут созданы по событиям PipeWire. Фактическое поведение конкретной сборки SteamOS, включая выбор выхода самой игрой, проверяется на Deck. [Bluetooth в WirePlumber](https://pipewire.pages.freedesktop.org/wireplumber/daemon/configuration/bluetooth.html) · [Аудиоустройства BlueZ](https://github.com/bluez/bluez/blob/master/doc/org.bluez.Device.rst) · [Примечания SteamOS о переходе между режимами](https://store.steampowered.com/news/app/1675200/view/687522235410285838)
+The service starts with the user's `default.target` and restarts if its subscription to the audio server ends. When switching between Desktop Mode and Gaming Mode, it continues running if the user systemd manager stays up. If that manager starts again, it launches the service. WirePlumber's Bluetooth access depends on the active logind session. The service adds routes after a mode switch or wake as PipeWire reports the outputs. Test game output selection and mode switching on your SteamOS build. [WirePlumber Bluetooth configuration](https://pipewire.pages.freedesktop.org/wireplumber/daemon/configuration/bluetooth.html) · [BlueZ device API](https://github.com/bluez/bluez/blob/master/doc/org.bluez.Device.rst) · [SteamOS mode-switch release notes](https://store.steampowered.com/news/app/1675200/view/687522235410285838)
 
-## Ограничения и проверка на устройстве
+## Limits and on-device testing
 
-Steam Deck OLED оснащён Bluetooth 5.3 и выделенной Bluetooth-антенной. Valve не указывает максимальное число одновременных потоков на наушники. Доступность каждого потока зависит от Bluetooth-контроллера, прошивки, профиля, кодека и радиосреды. Сервис копирует стереосигнал. У моделей наушников могут различаться задержки кодирования и буферизации, поэтому звук может быть слышен с разной задержкой. [Характеристики Steam Deck OLED](https://www.steamdeck.com/en/tech)
+Steam Deck OLED has Bluetooth 5.3 and a dedicated Bluetooth antenna. Valve does not specify the maximum number of simultaneous headphone streams. The Bluetooth controller, firmware, profile, codec, and radio conditions affect how many streams are usable. The service copies the stereo audio signal. Headphone models can play that signal at different times because their codecs and buffers introduce different delays. [Steam Deck OLED specifications](https://www.steamdeck.com/en/tech)
 
-Автоматические проверки используют модели аудиографа и настоящий PipeWire с виртуальными приёмниками. Они проверяют доставку PCM-сигнала на три выхода и нулевой сигнал на выходе, имитирующем динамики, в том числе при отключении одной пары во время воспроизведения. Доступа к Steam Deck и физическим Bluetooth-наушникам при разработке не было.
+The automated suite exercises simulated audio graphs and a real PipeWire session with virtual receivers. It checks that PCM audio reaches three receivers, the simulated speaker output stays silent, and playback continues on the remaining receivers when one disconnects. Tests with physical Bluetooth headphones and Steam Deck hardware are still pending.
 
-| На Steam Deck OLED | Как проверить |
+| Scenario | Check on Steam Deck OLED |
 | --- | --- |
-| Одна пара | Подключить пару и включить звук. Проверить одну запись с маршрутом в `status`, звук в паре и тишину динамиков. |
-| Две разные пары | При работающем звуке подключить вторую. Проверить два маршрута и слышимость на обеих парах. |
-| Третья пара | Подключить её без отключения первых двух. Проверить три маршрута и звук на всех парах либо отметить, на каком этапе третья пара не подключилась или не зазвучала. |
-| Отключение одной пары | Во время непрерывного звука отключить одну пару. Проверить, что оставшаяся играет, а динамики молчат. |
-| Отключение всех | Отключить все пары. Проверить возврат обычного выхода и ноль маршрутов у сервиса. Затем подключить одну пару снова. |
-| Сон и пробуждение | Усыпить и разбудить Deck с двумя парами. После восстановления Bluetooth проверить маршруты и слышимость. |
-| Перезагрузка | Оставить автозапуск включённым, перезагрузить Deck, подключить пары и проверить работу без повторной установки. |
-| Desktop Mode ↔ Gaming Mode | В обе стороны проверить наличие виртуального выхода, слышимость в игре и тишину динамиков при активном объединении. |
-| Выключение Bluetooth | Выключить и снова включить Bluetooth в SteamOS. Проверить возврат обычного выхода, затем повторное появление маршрутов. |
-| Аварийное завершение | При подключённых парах выполнить команду ниже. Через несколько секунд проверить состояние сервиса, число виртуальных выходов и звук. |
-| Удаление | Выполнить `uninstall`. Проверить обычный звук, отсутствие созданного аудиовыхода и сохранённые сопряжения. |
+| One pair | Connect one pair and start audio. Verify one linked route in `status`, audible headphones, and silent speakers. |
+| Two different pairs | Connect the second pair during playback. Verify two linked routes and audible playback on both pairs. |
+| A third pair | Connect it with the first two still connected. Verify three routes and playback on all three, or record where connection or playback failed. |
+| Disconnect one pair | Disconnect one pair during continuous audio. Verify that the remaining pair keeps playing and the speakers stay silent. |
+| Disconnect all pairs | Verify that the service reports zero routes and restores a regular output. Then reconnect one pair. |
+| Sleep and wake | Put the Deck to sleep with two pairs connected. Wake it and verify both routes and playback after Bluetooth reconnects. |
+| Reboot | Leave automatic startup enabled, reboot, and connect the headphones. Verify service operation after sign-in. |
+| Desktop Mode ↔ Gaming Mode | Switch in both directions. Verify the virtual output, game audio in the headphones, and silent speakers while the game uses multicast. |
+| Toggle Bluetooth | Turn Bluetooth off and on. Verify that the regular output returns, then verify that the routes reappear. |
+| Service crash | With headphones connected, run the commands below. Verify the service status, the number of virtual outputs, and playback. |
+| Uninstall | Run `uninstall`. Verify regular audio, removal of the virtual output, and preserved Bluetooth pairings. |
 
 ```bash
 systemctl --user kill --signal=SIGKILL steam-deck-bluetooth-audio.service
@@ -104,7 +102,7 @@ sleep 6
 pactl list short sinks
 ```
 
-Для отчёта укажите версию SteamOS, результаты каждого сценария, модели наушников и их профили. Команды для сбора версий приведены ниже.
+When reporting test results, include the SteamOS version, headphone models and profiles, and what happened in each scenario. Use these commands to collect versions.
 
 ```bash
 cat /etc/os-release
@@ -114,7 +112,7 @@ pactl --version
 bluetoothctl --version
 ```
 
-## Проверки для разработчиков
+## Developer checks
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -122,6 +120,6 @@ shellcheck install.sh uninstall.sh src/steam-deck-bluetooth-audio
 dbus-run-session -- python3 tests/integration_pipewire.py
 ```
 
-Интеграционному тесту нужны `pipewire`, `pipewire-pulse`, `wireplumber`, `dbus-run-session`, `wpctl`, `pactl` и `pacat`. Тест поднимает отдельную пользовательскую аудиосессию во временном каталоге. GitHub Actions запускает автоматические проверки при изменениях проекта.
+The integration test requires `pipewire`, `pipewire-pulse`, `wireplumber`, `dbus-run-session`, `wpctl`, `pactl`, and `pacat`. It starts a separate user audio session in a temporary directory. GitHub Actions runs these checks on pushes and pull requests.
 
-Лицензия [MIT](LICENSE).
+[MIT License](LICENSE)
