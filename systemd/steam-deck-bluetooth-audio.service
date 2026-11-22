@@ -1,0 +1,17 @@
+# Managed by Steam Deck Bluetooth Audio Multicast
+[Unit]
+Description=Steam Deck Bluetooth Audio Multicast
+Wants=pipewire-pulse.socket wireplumber.service
+After=pipewire-pulse.socket wireplumber.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+ExecStart=%h/.local/share/steam-deck-bluetooth-audio/deck_audio.py run
+Restart=on-failure
+RestartSec=4s
+TimeoutStopSec=35s
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

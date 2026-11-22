@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Managed by Steam Deck Bluetooth Audio Multicast
+set -euo pipefail
+
+app=steam-deck-bluetooth-audio
+unit="$app.service"
+app_dir="$HOME/.local/share/$app"
+
+case "${1:-}" in
+    start|stop|restart)
+        if [[ -z "${XDG_RUNTIME_DIR:-}" || ! -d "$XDG_RUNTIME_DIR" ]]; then
+            echo "Откройте Konsole в Desktop Mode и повторите команду." >&2
+            exit 1
+        fi
+        exec 9<"$XDG_RUNTIME_DIR"
+        flock -x 9
+        ;;
+esac
+
+case "${1:-}" in
+    start)
+        systemctl --user enable --now "$unit"
+        ;;
+    stop)
+        systemctl --user disable --now "$unit"
+        "$app_dir/deck_audio.py" cleanup
+        ;;
+    restart)
+        systemctl --user enable "$unit"
+        systemctl --user restart "$unit"
+        ;;
+    status)
+        if systemctl --user is-active --quiet "$unit"; then
+            echo "Сервис работает."
+        else
+            echo "Сервис остановлен или перезапускается."
+        fi
+        printf 'Автозапуск: '
+        systemctl --user is-enabled "$unit" || true
+        "$app_dir/deck_audio.py" status
+        ;;
+    uninstall)
+        exec "$app_dir/uninstall.sh"
+        ;;
+    *)
+        echo "Использование: $app {start|stop|status|restart|uninstall}" >&2
+        exit 2
+        ;;
+esac

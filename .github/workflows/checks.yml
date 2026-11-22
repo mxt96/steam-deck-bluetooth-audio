@@ -1,0 +1,23 @@
+name: Checks
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pipewire-bin pipewire-pulse wireplumber pulseaudio-utils dbus-daemon shellcheck
+      - name: Check shell scripts
+        run: shellcheck install.sh uninstall.sh src/steam-deck-bluetooth-audio
+      - name: PipeWire integration
+        run: dbus-run-session -- python3 tests/integration_pipewire.py
