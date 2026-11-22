@@ -10,11 +10,11 @@
 
 ### Скачать, проверить и запустить
 
-Команды загрузки с GitHub заработают после публикации проекта в `MTX96/steam-deck-bluetooth-audio`. Из полученного другим способом архива распакуйте проект и перейдите сразу к просмотру и запуску установщика.
+Команды загрузки с GitHub заработают после публикации проекта в `mxt96/steam-deck-bluetooth-audio`. Из полученного другим способом архива распакуйте проект и перейдите сразу к просмотру и запуску установщика.
 
 ```bash
 cd ~/Downloads
-curl -fL https://github.com/MTX96/steam-deck-bluetooth-audio/archive/refs/heads/main.tar.gz \
+curl -fL https://github.com/mxt96/steam-deck-bluetooth-audio/archive/refs/heads/main.tar.gz \
   -o steam-deck-bluetooth-audio.tar.gz
 tar -xzf steam-deck-bluetooth-audio.tar.gz
 cd steam-deck-bluetooth-audio-main
@@ -33,7 +33,7 @@ bash install.sh
 Запускайте этот вариант, если доверяете содержимому ветки `main`. Команда сразу выполняет скачанный установщик с правами текущего пользователя. Перед первым запуском можно использовать вариант с предварительным просмотром выше.
 
 ```bash
-bash -c 'set -e; d=$(mktemp -d); trap '\''rm -rf -- "$d"'\'' EXIT; curl -fL https://github.com/MTX96/steam-deck-bluetooth-audio/archive/refs/heads/main.tar.gz -o "$d/source.tar.gz"; tar -xzf "$d/source.tar.gz" -C "$d"; bash "$d/steam-deck-bluetooth-audio-main/install.sh"'
+bash -c 'set -e; d=$(mktemp -d); trap '\''rm -rf -- "$d"'\'' EXIT; curl -fL https://github.com/mxt96/steam-deck-bluetooth-audio/archive/refs/heads/main.tar.gz -o "$d/source.tar.gz"; tar -xzf "$d/source.tar.gz" -C "$d"; bash "$d/steam-deck-bluetooth-audio-main/install.sh"'
 ```
 
 Подключите две пары в настройках Bluetooth, включите звук и подождите несколько секунд. Выход по умолчанию должен смениться на **Bluetooth Audio Multicast**, а команда `status` показать оба маршрута. Для приложения, у которого выбран отдельный аудиовыход, выберите **Bluetooth Audio Multicast** в его настройках звука или в микшере KDE. Если приложение удерживает старый выход, перезапустите воспроизведение.
